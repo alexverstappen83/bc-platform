@@ -1,0 +1,9 @@
+#cloud-config
+# Minimale cloud-init voor de multipass-provider (NAT).
+# Multipass beheert zelf de gebruiker + SSH-toegang, dus alleen k3s hier.
+package_update: true
+packages:
+  - curl
+  - open-iscsi          # alvast voor Longhorn (latere milestone)
+runcmd:
+  - export INSTALL_K3S_EXEC="server --disable=traefik --write-kubeconfig-mode=0644 --cluster-init"; curl -sfL https://get.k3s.io | sh -

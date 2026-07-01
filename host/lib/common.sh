@@ -18,6 +18,16 @@ load_env() {
 # Alle kubectl/helm-commando's gebruiken de opgehaalde kubeconfig.
 export KUBECONFIG="${REPO_ROOT}/kubeconfig"
 
+# Bepaal het IP van de VM, afhankelijk van de provider.
+#  - multipass : dynamisch via `multipass info`
+#  - utm/anders: het VM_IP uit .env (statisch of door jou ingevuld)
+detect_vm_ip() {
+  case "${VM_PROVIDER:-multipass}" in
+    multipass) multipass info k3s-server 2>/dev/null | awk '/IPv4/{print $2; exit}' ;;
+    *)         echo "${VM_IP:-}" ;;
+  esac
+}
+
 # Nette logging.
 info()  { printf '\033[1;34m▶ %s\033[0m\n' "$*"; }
 ok()    { printf '\033[1;32m✔ %s\033[0m\n' "$*"; }

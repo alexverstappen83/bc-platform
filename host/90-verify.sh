@@ -16,7 +16,8 @@ check() { if eval "$2" >/dev/null 2>&1; then ok "$1"; else err "$1"; fail=1; fi;
 if [ "$NETWORK_MODE" = "bridged" ]; then
   EXP_TRAEFIK="$TRAEFIK_IP"; EXP_PORTAINER="$PORTAINER_IP"; EXP_TECHNITIUM="$TECHNITIUM_IP"
 else
-  EXP_TRAEFIK="$VM_IP"; EXP_PORTAINER="$VM_IP"; EXP_TECHNITIUM="$VM_IP"
+  NODE_IP="$(detect_vm_ip)"; : "${NODE_IP:=${VM_IP:-}}"
+  EXP_TRAEFIK="$NODE_IP"; EXP_PORTAINER="$NODE_IP"; EXP_TECHNITIUM="$NODE_IP"
 fi
 
 info "Verificatie per laag (mode=${NETWORK_MODE})..."
