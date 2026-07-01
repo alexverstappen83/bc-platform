@@ -1,15 +1,18 @@
-# Bright Cubes Kubernetes Platform
+# Bright Cubes Platform
 
-k3s platform voor Mac mini cluster.
+Kubernetes platform voor de Bright Cubes Mac mini omgeving.
 
-Componenten:
-- MetalLB
-- Technitium DNS
+## Doel
+
+- k3s cluster
+- Portainer
 - Traefik
+- Technitium DNS
 - Harbor
 - Longhorn
-- Monitoring
+- Grafana
+- Prometheus
 - Authentik
+- AI Platform
 
-Uitgangspunt:
-Alles reproduceerbaar, beheersbaar en zoveel mogelijk via webinterfaces.
+Alle componenten worden vanuit Git beheerd.
