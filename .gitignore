@@ -2,8 +2,13 @@
 *.tmp
 .env
 .env.*
+!.env.example
 kubeconfig*
 *.key
 *.crt
 *.pem
 secrets/
+
+# VM-artefacten (worden lokaal gegenereerd)
+vm/seed.iso
+vm/.seed/

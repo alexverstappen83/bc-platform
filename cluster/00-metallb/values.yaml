@@ -1,0 +1,4 @@
+# MetalLB draait met standaardwaarden. De pool + L2Advertisement komen als losse
+# CR's (cluster/00-metallb/config/) NA het opstarten van de controller-webhook.
+# In L2-mode heeft de speaker geen extra config nodig.
+{}

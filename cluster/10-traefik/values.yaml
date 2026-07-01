@@ -1,0 +1,19 @@
+# Traefik als enige ingress-controller + LoadBalancer op een vaste MetalLB-VIP.
+service:
+  type: LoadBalancer
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.124.60
+  # Client-IP behouden (handig voor logging/toegangsregels later).
+  externalTrafficPolicy: Local
+
+# Traefik is de standaard IngressClass, zodat Ingress-objecten zonder expliciete
+# class toch via Traefik lopen.
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+
+providers:
+  kubernetesIngress:
+    enabled: true
+  kubernetesCRD:
+    enabled: true

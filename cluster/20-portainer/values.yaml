@@ -1,0 +1,16 @@
+# Portainer als visuele beheerlaag.
+# Directe LoadBalancer-VIP (.62) voor toegang vóórdat DNS werkt; de vriendelijke
+# hostname komt via het losse Ingress-manifest (manifests/ingress.yaml).
+service:
+  type: LoadBalancer
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.124.62
+
+# Persistente opslag via de standaard k3s StorageClass (local-path).
+persistence:
+  enabled: true
+  size: 1Gi
+
+# Ingress leveren we zelf als los manifest, niet via de chart.
+ingress:
+  enabled: false

@@ -1,0 +1,12 @@
+# Aparte ClusterIP-service voor de web-UI (poort 5380), waar de Ingress naar wijst.
+apiVersion: v1
+kind: Service
+metadata:
+  name: technitium-web
+  namespace: technitium
+spec:
+  type: ClusterIP
+  selector:
+    app: technitium-dns
+  ports:
+    - { name: web, port: 5380, targetPort: 5380 }

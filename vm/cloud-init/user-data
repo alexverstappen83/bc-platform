@@ -1,0 +1,65 @@
+#cloud-config
+# bc-platform — k3s server node (Ubuntu 24.04 arm64) op UTM met BRIDGED netwerk.
+# Bouw de seed:  ./vm/make-seed-iso.sh   -> koppel vm/seed.iso als 2e drive in UTM.
+#
+# Pas VOOR gebruik aan:
+#   1) ssh_authorized_keys  -> jouw publieke sleutel (cat ~/.ssh/id_ed25519.pub)
+#   2) IP/gateway/NIC hieronder als je netwerk afwijkt (zie .env.example)
+hostname: k3s-server
+manage_etc_hosts: true
+
+users:
+  - name: ubuntu
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - "ssh-ed25519 AAAA...VERVANG_MIJ... user@mac"
+
+package_update: true
+packages:
+  - curl
+  - open-iscsi        # alvast aanwezig voor Longhorn (latere milestone)
+
+write_files:
+  # Statisch LAN-IP op de bridged NIC. 'enp0s1' is de standaard bij Apple
+  # Virtualization; verifieer eenmalig met `ip a` en pas zo nodig aan.
+  - path: /etc/netplan/99-bc-static.yaml
+    permissions: "0600"
+    content: |
+      network:
+        version: 2
+        ethernets:
+          enp0s1:
+            dhcp4: false
+            addresses: [192.168.124.51/24]
+            routes:
+              - to: default
+                via: 192.168.124.1
+            nameservers:
+              addresses: [192.168.124.1, 1.1.1.1]
+
+  # k3s server-install. Identiek aan vm/provision/install-k3s-server.sh —
+  # houd beide gelijk bij wijzigingen.
+  - path: /usr/local/bin/install-k3s-server.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      NODE_IP="192.168.124.51"
+      NIC="enp0s1"
+      export INSTALL_K3S_EXEC="server \
+        --node-ip=${NODE_IP} --advertise-address=${NODE_IP} \
+        --flannel-iface=${NIC} \
+        --tls-san=${NODE_IP} --tls-san=192.168.124.50 --tls-san=k3s-server \
+        --disable=traefik --disable=servicelb \
+        --write-kubeconfig-mode=0644 --cluster-init"
+      curl -sfL https://get.k3s.io | sh -
+
+runcmd:
+  - netplan apply
+  - sleep 3
+  - bash /usr/local/bin/install-k3s-server.sh
+
+final_message: "bc-platform k3s server klaar. IP: 192.168.124.51 — nu op de Mac: make up"

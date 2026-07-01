@@ -1,0 +1,18 @@
+# DNS-service: één MetalLB-VIP voor zowel UDP:53 als TCP:53.
+# allow-shared-ip laat beide protocollen dezelfde VIP delen.
+apiVersion: v1
+kind: Service
+metadata:
+  name: technitium-dns
+  namespace: technitium
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.124.61
+    metallb.universe.tf/allow-shared-ip: "technitium-dns"
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local     # behoudt client-IP voor DNS-toegangsregels
+  selector:
+    app: technitium-dns
+  ports:
+    - { name: dns-udp, port: 53, targetPort: 53, protocol: UDP }
+    - { name: dns-tcp, port: 53, targetPort: 53, protocol: TCP }

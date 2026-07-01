@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: technitium-dns
+  namespace: technitium
+  labels:
+    app: technitium-dns
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate            # één PVC: geen overlappende pods bij een rollout
+  selector:
+    matchLabels:
+      app: technitium-dns
+  template:
+    metadata:
+      labels:
+        app: technitium-dns
+    spec:
+      containers:
+        - name: technitium
+          # Pin naar een vaste versie voor reproduceerbaarheid (bv. :13.6.0).
+          image: technitium/dns-server:latest
+          env:
+            - name: DNS_SERVER_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: technitium-admin
+                  key: password
+          ports:
+            - { containerPort: 5380, name: web }
+            - { containerPort: 53, name: dns-udp, protocol: UDP }
+            - { containerPort: 53, name: dns-tcp, protocol: TCP }
+          volumeMounts:
+            - name: config
+              mountPath: /etc/dns
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5380
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: technitium-config

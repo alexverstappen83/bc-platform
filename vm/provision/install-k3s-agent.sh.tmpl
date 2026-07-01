@@ -1,0 +1,14 @@
+#!/bin/bash
+# Template: laat een EXTRA node joinen als agent (worker).
+# Kopieer naar install-k3s-agent.sh, vul de waarden in, en draai dit IN de nieuwe VM.
+set -euo pipefail
+
+export K3S_URL="https://192.168.124.51:6443"
+export K3S_TOKEN="__PLAK_TOKEN_UIT_server/node-token__"
+
+NODE_IP="__DIT_NODE_LAN_IP__"     # bijv. 192.168.124.52
+NIC="enp0s1"
+
+export INSTALL_K3S_EXEC="agent --node-ip=${NODE_IP} --flannel-iface=${NIC}"
+
+curl -sfL https://get.k3s.io | sh -
