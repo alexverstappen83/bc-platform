@@ -50,21 +50,26 @@ make seed        # levert vm/seed.iso
    als opstart-disk.
 4. Resources: **4 CPU / 8 GB RAM / 60 GB disk**.
 5. Ná het aanmaken → **Edit** de VM:
-   - **Network** → Mode = **Bridged (Advanced)**, Interface = je bekabelde
-     poort (meestal `en0`).
+   - **Network** → Mode hangt af van `NETWORK_MODE` in je `.env`:
+     - `nat` (standaard, werkt over wifi) → **Shared Network**.
+     - `bridged` (kabel nodig, LAN-breed) → **Bridged (Advanced)**, Interface =
+       je bekabelde poort.
    - **Drives** → **New Drive** → **Import** → kies `vm/seed.iso` (dit is de
      cloud-init bron). Zorg dat dit als extra CD/USB-drive hangt.
 6. Hernoem de VM naar **`k3s-server`** (belangrijk: de `make`-targets gebruiken
    die naam via `utmctl`).
 7. **Start** de VM.
 
-Cloud-init draait automatisch: gebruiker `ubuntu`, statisch IP `192.168.124.51`,
-en k3s wordt geïnstalleerd. Dit duurt enkele minuten.
+Cloud-init draait automatisch: gebruiker `ubuntu`, k3s-installatie, en (bij
+bridged) het statische IP. Dit duurt enkele minuten.
 
-Wacht tot SSH werkt:
+**In NAT-modus:** lees het IP dat de VM kreeg af in het UTM-venster (of typ
+`ip -4 addr show` in de VM-console) en zet dat als `VM_IP=` in je `.env`.
+
+Wacht tot SSH werkt (vervang het IP door jouw `VM_IP`):
 
 ```bash
-ssh ubuntu@192.168.124.51 'sudo k3s kubectl get nodes'
+ssh ubuntu@<VM_IP> 'sudo k3s kubectl get nodes'
 ```
 
 > Krijg je geen verbinding? Log in via het UTM-console-venster en check met

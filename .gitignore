@@ -12,3 +12,4 @@ secrets/
 # VM-artefacten (worden lokaal gegenereerd)
 vm/seed.iso
 vm/.seed/
+vm/.build/

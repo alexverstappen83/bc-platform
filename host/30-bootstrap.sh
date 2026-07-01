@@ -18,18 +18,24 @@ helm repo add traefik   https://traefik.github.io/charts   >/dev/null 2>&1 || tr
 helm repo add portainer https://portainer.github.io/k8s/   >/dev/null 2>&1 || true
 helm repo update >/dev/null
 
-# --- 1) MetalLB -------------------------------------------------------------
-info "MetalLB installeren..."
-helm upgrade --install metallb metallb/metallb \
-  --namespace metallb-system --create-namespace \
-  -f cluster/00-metallb/values.yaml --wait
-info "Wachten op de MetalLB controller (webhook) voordat we CR's toepassen..."
-kubectl wait --for=condition=Available deploy/metallb-controller \
-  -n metallb-system --timeout=120s
-kubectl -n metallb-system rollout status ds/metallb-speaker --timeout=120s
-info "IPAddressPool + L2Advertisement toepassen..."
-kubectl apply -f cluster/00-metallb/config/
-ok "MetalLB klaar"
+# --- 1) MetalLB (alleen in bridged-modus) -----------------------------------
+# In NAT-modus regelt k3s' ingebouwde servicelb (klipper) de LoadBalancer-IP's
+# op het VM-IP zelf; MetalLB heeft dan geen zin (en zou onbereikbaar zijn).
+if [ "${NETWORK_MODE:-nat}" = "bridged" ]; then
+  info "MetalLB installeren..."
+  helm upgrade --install metallb metallb/metallb \
+    --namespace metallb-system --create-namespace \
+    -f cluster/00-metallb/values.yaml --wait
+  info "Wachten op de MetalLB controller (webhook) voordat we CR's toepassen..."
+  kubectl wait --for=condition=Available deploy/metallb-controller \
+    -n metallb-system --timeout=120s
+  kubectl -n metallb-system rollout status ds/metallb-speaker --timeout=120s
+  info "IPAddressPool + L2Advertisement toepassen..."
+  kubectl apply -f cluster/00-metallb/config/
+  ok "MetalLB klaar"
+else
+  info "NAT-modus: MetalLB overgeslagen — k3s servicelb regelt de LoadBalancers."
+fi
 
 # --- 2) Traefik -------------------------------------------------------------
 info "Traefik (ingress + LoadBalancer) installeren..."
