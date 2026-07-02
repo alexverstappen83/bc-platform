@@ -32,3 +32,23 @@ spec:
       syncPolicy:
         automated: { prune: true, selfHeal: true }
         syncOptions: ["CreateNamespace=false"]
+  # --- ArgoCD Image Updater: per-app annotaties, conditioneel ------------------
+  # Alleen voor bc-doelen + ontwikkel: nieuwe ghcr-builds gaan automatisch live
+  # (geen CI-writeback meer nodig). Image Updater schrijft de nieuwe tag terug
+  # naar de overlay-kustomization via Git.
+  # LET OP: dit is app-specifiek (bc-doelen heeft 2 images). Voeg je een 2e app
+  # toe, breid dit blok dan uit met een eigen conditie (of stap over op een
+  # per-app configbestand). Zonder conditie zou een andere app deze images erven.
+  templatePatch: |
+    {{- if and (eq (index .path.segments 1) "bc-doelen") (eq .path.basename "ontwikkel") }}
+    metadata:
+      annotations:
+        argocd-image-updater.argoproj.io/image-list: "backend=ghcr.io/alexverstappen83/bc-doelen-backend,frontend=ghcr.io/alexverstappen83/bc-doelen-frontend"
+        argocd-image-updater.argoproj.io/backend.update-strategy: newest-build
+        argocd-image-updater.argoproj.io/frontend.update-strategy: newest-build
+        argocd-image-updater.argoproj.io/backend.pull-secret: pullsecret:argocd/ghcr-creds
+        argocd-image-updater.argoproj.io/frontend.pull-secret: pullsecret:argocd/ghcr-creds
+        argocd-image-updater.argoproj.io/write-back-method: git
+        argocd-image-updater.argoproj.io/write-back-target: kustomization
+        argocd-image-updater.argoproj.io/git-branch: claude/k3s-mac-mini-m4-b2dhrz
+    {{- end }}
