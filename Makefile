@@ -32,6 +32,9 @@ go: vm up ## Alles-in-één: VM starten + cluster uitrollen + verifiëren
 argocd: ## Installeer ArgoCD + DTAP-namespaces + ApplicationSets (GitOps)
 	@bash host/40-argocd.sh
 
+lan-forward: ## (NAT) Forward DNS(:5354) + HTTP(:80) van de Mac naar de VM
+	@bash host/50-lan-forward.sh
+
 vm-down: ## Stop de VM
 	@multipass stop k3s-server 2>/dev/null || utmctl stop k3s-server 2>/dev/null || true
 
