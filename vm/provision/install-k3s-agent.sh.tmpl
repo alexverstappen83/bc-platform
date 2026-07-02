@@ -1,13 +1,21 @@
 #!/bin/bash
 # Template: laat een EXTRA node joinen als agent (worker).
-# Kopieer naar install-k3s-agent.sh, vul de waarden in, en draai dit IN de nieuwe VM.
+# Kopieer naar install-k3s-agent.sh, vul de waarden in, en draai dit IN de
+# tweede VM (bijv. `multipass exec k3s-agent -- sudo bash install-k3s-agent.sh`).
+#
+# Vereist BRIDGED netwerk op beide Macs — in NAT kunnen de VM's elkaar niet
+# bereiken. Zie docs/adding-a-node.md.
 set -euo pipefail
 
-export K3S_URL="https://192.168.124.51:6443"
+# API-endpoint van node 1 = het LAN-IP van de bestaande server-VM.
+export K3S_URL="https://__SERVER_LAN_IP__:6443"     # bijv. https://192.168.124.55:6443
 export K3S_TOKEN="__PLAK_TOKEN_UIT_server/node-token__"
 
-NODE_IP="__DIT_NODE_LAN_IP__"     # bijv. 192.168.124.52
-NIC="enp0s1"
+# LAN-IP van DEZE agent-VM (uit `multipass info k3s-agent`, in je 192.168.124.x-range).
+NODE_IP="__DIT_NODE_LAN_IP__"     # bijv. 192.168.124.56
+# Naam van de GEBRUGDE NIC in deze VM (die met het LAN-IP hierboven).
+# Vind 'm met:  ip -4 -o addr show | grep 192.168.124
+NIC="__NIC_NAAM__"                # bijv. enp0s2 / ens4
 
 export INSTALL_K3S_EXEC="agent --node-ip=${NODE_IP} --flannel-iface=${NIC}"
 

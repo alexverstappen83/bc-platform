@@ -5,5 +5,15 @@ package_update: true
 packages:
   - curl
   - open-iscsi          # alvast voor Longhorn (latere milestone)
+write_files:
+  # DNS-fix: multipass-VM's kunnen via de NAT-resolver soms niet resolven
+  # ("lookup registry-1.docker.io: Try again"), waardoor image-pulls falen.
+  # Pin publieke resolvers zodat de VM altijd namen kan opzoeken.
+  - path: /etc/systemd/resolved.conf.d/99-bc.conf
+    content: |
+      [Resolve]
+      DNS=1.1.1.1 9.9.9.9
+      FallbackDNS=8.8.8.8
 runcmd:
+  - systemctl restart systemd-resolved
   - export INSTALL_K3S_EXEC="server --disable=traefik --write-kubeconfig-mode=0644 --cluster-init"; curl -sfL https://get.k3s.io | sh -

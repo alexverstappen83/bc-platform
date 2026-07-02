@@ -21,10 +21,24 @@ export KUBECONFIG="${REPO_ROOT}/kubeconfig"
 # Bepaal het IP van de VM, afhankelijk van de provider.
 #  - multipass : dynamisch via `multipass info`
 #  - utm/anders: het VM_IP uit .env (statisch of door jou ingevuld)
+#
+# In bridged-modus heeft de multipass-VM TWEE IPv4's: de NAT-adapter (eerst) en
+# de gebrugde LAN-adapter. We willen dan het LAN-IP. Dat filteren we op het
+# subnet van HOST_IP (eerste drie octetten), zodat de forwards en records naar
+# het juiste adres wijzen. In NAT-modus is er maar één IPv4 → gewoon de eerste.
 detect_vm_ip() {
   case "${VM_PROVIDER:-multipass}" in
-    multipass) multipass info k3s-server 2>/dev/null | awk '/IPv4/{print $2; exit}' ;;
-    *)         echo "${VM_IP:-}" ;;
+    multipass)
+      local ips prefix
+      ips="$(multipass info k3s-server 2>/dev/null | awk '/IPv4/{print $2} /^ +[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/{print $1}')"
+      if [ "${NETWORK_MODE:-nat}" = "bridged" ] && [ -n "${HOST_IP:-}" ]; then
+        prefix="${HOST_IP%.*}."
+        echo "$ips" | grep -F "$prefix" | head -n1
+      else
+        echo "$ips" | head -n1
+      fi
+      ;;
+    *) echo "${VM_IP:-}" ;;
   esac
 }
 
