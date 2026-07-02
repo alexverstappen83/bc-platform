@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ontwikkel
+resources:
+  - ../../base
+# CI (kustomize edit set image) schrijft hier de git-sha van de laatste build:
+images:
+  - name: ghcr.io/alexverstappen83/bc-doelen-backend
+    newTag: latest
+  - name: ghcr.io/alexverstappen83/bc-doelen-frontend
+    newTag: latest
+patches:
+  # per-omgeving config (CORS/redirect naar de ontwikkel-host)
+  - path: patch-config.yaml
+  # ingress-host voor ontwikkel
+  - target: { kind: Ingress, name: bc-doelen }
+    patch: |
+      - op: replace
+        path: /spec/rules/0/host
+        value: bcdoelen.ontwikkel.brightcubes.ai

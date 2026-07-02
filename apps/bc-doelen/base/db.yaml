@@ -1,0 +1,49 @@
+# PostgreSQL (compose-service 'db'). Servicenaam 'db' zodat DATABASE_URL
+# (...@db:5432/...) ongewijzigd blijft t.o.v. compose.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bc-doelen-pgdata
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector: { matchLabels: { app: db } }
+  template:
+    metadata: { labels: { app: db } }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - { name: POSTGRES_USER,     valueFrom: { configMapKeyRef: { name: bc-doelen-config, key: POSTGRES_USER } } }
+            - { name: POSTGRES_DB,       valueFrom: { configMapKeyRef: { name: bc-doelen-config, key: POSTGRES_DB } } }
+            - { name: POSTGRES_PASSWORD, valueFrom: { secretKeyRef:    { name: bc-doelen-secrets, key: POSTGRES_PASSWORD } } }
+          ports: [ { containerPort: 5432 } ]
+          volumeMounts:
+            - { name: pgdata, mountPath: /var/lib/postgresql/data }
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "bcdoelen"] }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim: { claimName: bc-doelen-pgdata }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  selector: { app: db }
+  ports: [ { port: 5432, targetPort: 5432 } ]

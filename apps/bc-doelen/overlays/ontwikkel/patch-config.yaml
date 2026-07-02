@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bc-doelen-config
+data:
+  CORS_ORIGINS: http://bcdoelen.ontwikkel.brightcubes.ai
+  EXACT_REDIRECT_URI: http://bcdoelen.ontwikkel.brightcubes.ai/api/exact/callback

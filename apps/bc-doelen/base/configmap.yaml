@@ -1,0 +1,16 @@
+# Niet-geheime configuratie voor BC-Doelen. Geheimen staan in Secret
+# 'bc-doelen-secrets' (out-of-band aangemaakt, niet in Git — zie ../../README.md).
+# Per-omgeving waarden (CORS/redirect) worden in de overlay overschreven.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bc-doelen-config
+data:
+  POSTGRES_USER: bcdoelen
+  POSTGRES_DB: bcdoelen
+  INITIAL_ADMIN_EMAIL: admin@brightcubes.nl
+  EXACT_BASE_URL: https://start.exactonline.nl
+  GITHUB_REPO: alexverstappen83/bc-doelen
+  GITHUB_BRANCH: main
+  CORS_ORIGINS: http://localhost
+  EXACT_REDIRECT_URI: http://localhost/api/exact/callback

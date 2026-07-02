@@ -1,0 +1,19 @@
+# Worker (compose 'worker': ZELFDE backend-image, command ["worker"]).
+# Geen Service — draait op de achtergrond.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: worker } }
+  template:
+    metadata: { labels: { app: worker } }
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/alexverstappen83/bc-doelen-backend:latest
+          args: ["worker"]
+          envFrom:
+            - configMapRef: { name: bc-doelen-config }
+            - secretRef:    { name: bc-doelen-secrets }

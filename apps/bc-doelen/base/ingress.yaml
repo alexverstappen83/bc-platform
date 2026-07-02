@@ -1,0 +1,24 @@
+# Traefik-Ingress = vervanging van de Caddy-proxy uit compose.
+# Routing 1-op-1 uit de Caddyfile:
+#   /api/*  + /health  -> api:8000
+#   al het overige     -> frontend:80
+# De host wordt per omgeving in de overlay gezet.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bc-doelen
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: bcdoelen.placeholder      # overlay overschrijft dit
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend: { service: { name: api, port: { number: 8000 } } }
+          - path: /health
+            pathType: Prefix
+            backend: { service: { name: api, port: { number: 8000 } } }
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: frontend, port: { number: 80 } } }

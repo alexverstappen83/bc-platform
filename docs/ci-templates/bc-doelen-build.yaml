@@ -1,0 +1,65 @@
+# Kopieer naar .github/workflows/build.yaml IN DE BC-Doelen REPO.
+# Bouwt backend + frontend, pusht naar ghcr, en schrijft de nieuwe tags terug
+# naar bc-platform (overlay ontwikkel) -> ArgoCD rolt uit.
+#
+# Vereist secret in de BC-Doelen repo:
+#   BC_PLATFORM_PAT = fijnmazige PAT met Contents: read/write op ALLEEN bc-platform.
+name: build-and-deploy
+on:
+  push:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: alexverstappen83
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { name: bc-doelen-backend,  context: ./backend }
+          - { name: bc-doelen-frontend, context: ./frontend }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.name }}:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: alexverstappen83/bc-platform
+          ref: claude/k3s-mac-mini-m4-b2dhrz
+          token: ${{ secrets.BC_PLATFORM_PAT }}
+      - name: Setup kustomize
+        run: |
+          curl -sL "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+      - name: Bump image-tags in overlay ontwikkel
+        run: |
+          cd apps/bc-doelen/overlays/ontwikkel
+          kustomize edit set image ${{ env.REGISTRY }}/${{ env.OWNER }}/bc-doelen-backend=${{ env.REGISTRY }}/${{ env.OWNER }}/bc-doelen-backend:${{ github.sha }}
+          kustomize edit set image ${{ env.REGISTRY }}/${{ env.OWNER }}/bc-doelen-frontend=${{ env.REGISTRY }}/${{ env.OWNER }}/bc-doelen-frontend:${{ github.sha }}
+          cd "$GITHUB_WORKSPACE"
+          git config user.name  "bc-ci-bot"
+          git config user.email "ci@brightcubes"
+          git commit -am "ontwikkel: bc-doelen -> ${{ github.sha }}"
+          git push
