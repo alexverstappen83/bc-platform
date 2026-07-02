@@ -1,0 +1,18 @@
+# AppProject: bakent af wat de bc-apps mogen (bron-repo + doel-namespaces).
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: bc-apps
+  namespace: argocd
+spec:
+  description: Bright Cubes applicaties (DTAP)
+  sourceRepos:
+    - https://github.com/alexverstappen83/bc-platform.git
+  destinations:
+    - { server: https://kubernetes.default.svc, namespace: ontwikkel }
+    - { server: https://kubernetes.default.svc, namespace: test-acceptatie }
+    - { server: https://kubernetes.default.svc, namespace: productie }
+  clusterResourceWhitelist:
+    - { group: "*", kind: "*" }
+  namespaceResourceWhitelist:
+    - { group: "*", kind: "*" }

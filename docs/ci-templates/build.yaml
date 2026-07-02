@@ -1,0 +1,61 @@
+# Kopieer naar .github/workflows/build.yaml IN JE APP-REPO.
+# Vul in: OWNER (github-gebruiker/org) en APPNAME. Voeg secret BC_PLATFORM_PAT toe
+# (fijnmazige PAT met Contents: read/write op alleen bc-platform).
+name: build-and-deploy
+on:
+  push:
+    branches: [ main ]
+
+env:
+  OWNER: OWNER
+  APP: APPNAME
+  REGISTRY: ghcr.io
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push (tag = git-sha)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile          # pas aan als je Dockerfile elders staat
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.APP }}:${{ github.sha }}
+
+      # --- nieuwe image-tag terugschrijven naar bc-platform (ontwikkel) ---
+      - name: Checkout bc-platform (deploy-repo)
+        uses: actions/checkout@v4
+        with:
+          repository: alexverstappen83/bc-platform
+          ref: claude/k3s-mac-mini-m4-b2dhrz
+          token: ${{ secrets.BC_PLATFORM_PAT }}
+          path: deploy
+
+      - name: Setup kustomize
+        run: |
+          curl -sL https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Bump image-tag in overlay ontwikkel
+        run: |
+          cd deploy/apps/${{ env.APP }}/overlays/ontwikkel
+          kustomize edit set image ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.APP }}=${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.APP }}:${{ github.sha }}
+          cd "$GITHUB_WORKSPACE/deploy"
+          git config user.name  "bc-ci-bot"
+          git config user.email "ci@brightcubes"
+          git commit -am "ontwikkel: ${{ env.APP }} -> ${{ github.sha }}"
+          git push

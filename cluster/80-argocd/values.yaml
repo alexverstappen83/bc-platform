@@ -1,0 +1,7 @@
+# ArgoCD (GitOps-engine). Minimale, NAT-vriendelijke opzet.
+configs:
+  params:
+    # UI/API over HTTP serveren, zodat 'kubectl port-forward' zonder TLS-gedoe werkt.
+    # Later (bridged + DNS): via Traefik-ingress + cert-manager op https.
+    server.insecure: true
+# Notificaties/ApplicationSet-controller zitten standaard in deze chart.

@@ -1,0 +1,19 @@
+# De drie DTAP-omgevingen als namespaces op dit ene cluster.
+# ArgoCD deployt per omgeving in de bijbehorende namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ontwikkel
+  labels: { bc-platform/omgeving: ontwikkel }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-acceptatie
+  labels: { bc-platform/omgeving: test-acceptatie }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: productie
+  labels: { bc-platform/omgeving: productie }

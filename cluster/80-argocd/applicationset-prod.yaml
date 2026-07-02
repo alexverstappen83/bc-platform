@@ -1,0 +1,31 @@
+# PRODUCTIE apart: GEEN automated sync -> je keurt elke uitrol handmatig goed in
+# de ArgoCD-UI (productiewaardige gate).
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: bc-apps-prod
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/alexverstappen83/bc-platform.git
+        revision: claude/k3s-mac-mini-m4-b2dhrz
+        directories:
+          - path: apps/*/overlays/productie
+  template:
+    metadata:
+      name: '{{index .path.segments 1}}-{{.path.basename}}'
+    spec:
+      project: bc-apps
+      source:
+        repoURL: https://github.com/alexverstappen83/bc-platform.git
+        targetRevision: claude/k3s-mac-mini-m4-b2dhrz
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: productie
+      # geen syncPolicy.automated -> handmatige sync/goedkeuring
+      syncPolicy:
+        syncOptions: ["CreateNamespace=false"]

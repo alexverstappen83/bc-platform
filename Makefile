@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: help prereqs vm seed kubeconfig bootstrap verify up go vm-down vm-nuke install-autostart uninstall
+.PHONY: help prereqs vm seed kubeconfig bootstrap verify up go argocd vm-down vm-nuke install-autostart uninstall
 
 help: ## Toon deze hulp
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -28,6 +28,9 @@ verify: ## Controleer elke laag
 up: kubeconfig bootstrap verify ## Kubeconfig + bootstrap + verify (VM draait al)
 
 go: vm up ## Alles-in-één: VM starten + cluster uitrollen + verifiëren
+
+argocd: ## Installeer ArgoCD + DTAP-namespaces + ApplicationSets (GitOps)
+	@bash host/40-argocd.sh
 
 vm-down: ## Stop de VM
 	@multipass stop k3s-server 2>/dev/null || utmctl stop k3s-server 2>/dev/null || true
