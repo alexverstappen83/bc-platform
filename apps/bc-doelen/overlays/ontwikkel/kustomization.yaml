@@ -7,10 +7,10 @@ resources:
 images:
 - name: ghcr.io/alexverstappen83/bc-doelen-backend
   newName: ghcr.io/alexverstappen83/bc-doelen-backend
-  newTag: 512764f5a787387d9c5788be251b9931704f02d4
+  newTag: 652c916e0bea2a9f212e2301a1131856a825c739
 - name: ghcr.io/alexverstappen83/bc-doelen-frontend
   newName: ghcr.io/alexverstappen83/bc-doelen-frontend
-  newTag: 512764f5a787387d9c5788be251b9931704f02d4
+  newTag: 652c916e0bea2a9f212e2301a1131856a825c739
   # per-omgeving config (CORS/redirect naar de ontwikkel-host)
   # ingress-host voor ontwikkel
 patches:
